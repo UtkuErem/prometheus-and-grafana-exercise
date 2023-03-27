@@ -1,0 +1,53 @@
+version: '3.7'
+services:
+
+
+  postgres:
+    image: postgres:15-bullseye
+    environment:
+      POSTGRES_PASSWORD: postgres
+      PGUSER: postgres
+      POSTGRES_NAME: postgres
+      POSTGRES_USER: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    env_file:
+      - ./env/postgres.env
+
+
+  web:
+    image: prometheus-grafana-exercise
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/workspace/app
+    depends_on:
+      - postgres
+
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./env/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+    depends_on:
+      - web
+
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3000:3000
+    env_file:
+      - ./env/grafana.env
+    depends_on:
+      - prometheus
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+
